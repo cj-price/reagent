@@ -259,3 +259,15 @@ ul.nav > li.brand > a {
     margin-right: 20px;
     /* border-right: 1px solid #454545; */
 }
+
+.color-blue {
+    color: blue;
+}
+
+.bg-blue {
+    background-color: blue;
+}
+
+.bg-blue > div {
+    color: white;
+}

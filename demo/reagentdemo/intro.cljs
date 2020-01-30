@@ -6,7 +6,8 @@
             [sitetools.core :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
             [simpleexample.core :as simple]
-            [todomvc.core :as todo]))
+            [todomvc.core :as todo]
+            [customcomponents.core :as cc]))
 
 (defn simple-component []
   [:div
@@ -320,6 +321,15 @@
                     :complete true
                     :src (s/src-of nil "todomvc/core.cljs")}]])
 
+(defn custom-components []
+  [:div.demo-text
+   [:h2 "Custom Components"]
+
+   [:p "Custom components can be added to act like native elements."]
+   [demo-component {:comp cc/custom-components-example
+                    :complete true
+                    :src (s/src-of nil "customcomponents/core.cljs")}]])
+
 (defn main []
   (let [show-all (r/atom false)
         head "Reagent: Minimalistic React for ClojureScript"]
@@ -334,4 +344,5 @@
        [performance]
        ;; Show heavy examples on load, to make html file smaller
        (when @show-all [complete-simple-demo])
-       (when @show-all [todomvc-demo])])))
+       (when @show-all [todomvc-demo])
+       [custom-components]])))

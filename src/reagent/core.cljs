@@ -395,3 +395,16 @@
   ;; with future versions of React (and return nil).
   [c]
   (comp/component-path c))
+
+(defn set-custom-components!
+  "Adds custom components to the available pool of native components.
+
+  components should be a map of kv pairs where the value is a reagent
+  component (function). Since reagent components can take anything, to
+  get :CustomComponent#some-id.some-class>div to work, the custom component
+  should be constructed to handle id, class, and children.
+
+  Note that this affects all instances of reagent render."
+  [components]
+  (assert (map? components) "components should be a map of reagent components")
+  (reset! tmpl/custom-components components))

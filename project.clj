@@ -26,7 +26,7 @@
                                   [figwheel "0.5.18"]
                                   [doo "0.1.11"]
                                   [cljsjs/prop-types "15.6.2-0"]]
-                   :source-paths ["demo" "test" "examples/todomvc/src" "examples/simple/src" "examples/geometry/src"]
+                   :source-paths ["demo" "test" "examples/todomvc/src" "examples/simple/src" "examples/geometry/src" "examples/custom-components/src"]
                    :resource-paths ["site" "target/cljsbuild/client" "target/cljsbuild/client-npm"]}}
 
   :clean-targets ^{:protect false} [:target-path :compile-path "out"]

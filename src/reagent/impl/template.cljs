@@ -12,6 +12,8 @@
 
 (declare as-element)
 
+(def ^:dynamic custom-components (atom {}))
+
 ;; From Weavejester's Hiccup, via pump:
 (def ^{:doc "Regular expression that parses a CSS-style id and class
              from a tag name."}
@@ -30,6 +32,9 @@
   (or (hiccup-tag? x)
       (ifn? x)
       (instance? NativeWrapper x)))
+
+(defn ^boolean has-props? [props]
+  (or (nil? props) (map? props)))
 
 
 ;;; Props conversion
@@ -297,7 +302,7 @@
 
 (defn fragment-element [argv]
   (let [props (nth argv 1 nil)
-        hasprops (or (nil? props) (map? props))
+        hasprops (has-props? props)
         jsprops (or (convert-prop-value (if hasprops props))
                     #js {})
         first-child (+ 1 (if hasprops 1 0))]
@@ -321,7 +326,7 @@
 (defn native-element [parsed argv first]
   (let [component (.-tag parsed)
         props (nth argv first nil)
-        hasprops (or (nil? props) (map? props))
+        hasprops (has-props? props)
         jsprops (or (convert-props (if hasprops props) parsed)
                     #js {})
         first-child (+ first (if hasprops 1 0))]
@@ -349,34 +354,42 @@
   (str (apply str msg) ": " (str-coll v) "\n" (comp/comp-name)))
 
 (defn vec-to-elem [v]
-  (assert (pos? (count v)) (hiccup-err v "Hiccup form should not be empty"))
-  (let [tag (nth v 0 nil)]
-    (assert (valid-tag? tag) (hiccup-err v "Invalid Hiccup form"))
-    (cond
-      (keyword-identical? :<> tag)
-      (fragment-element v)
+   (assert (pos? (count v)) (hiccup-err v "Hiccup form should not be empty"))
+   (let [tag (nth v 0 nil)]
+     (assert (valid-tag? tag) (hiccup-err v "Invalid Hiccup form"))
+     (cond
+       (keyword-identical? :<> tag)
+       (fragment-element v)
 
-      (hiccup-tag? tag)
-      (let [n (name tag)
-            pos (.indexOf n ">")]
-        (case pos
-          -1 (native-element (cached-parse n) v 1)
-          0 (let [component (nth v 1 nil)]
-              ;; Support [:> component ...]
-              (assert (= ">" n) (hiccup-err v "Invalid Hiccup tag"))
-              (native-element (->HiccupTag component nil nil nil) v 2))
-          ;; Support extended hiccup syntax, i.e :div.bar>a.foo
-          ;; Apply metadata (e.g. :key) to the outermost element.
-          ;; Metadata is probably used only with sequeneces, and in that case
-          ;; only the key of the outermost element matters.
-          (recur (with-meta [(subs n 0 pos)
-                             (assoc (with-meta v nil) 0 (subs n (inc pos)))]
-                            (meta v)))))
+       (hiccup-tag? tag)
+       (let [n (name tag)
+             pos (.indexOf n ">")]
+         (case pos
+           -1 (let [parsed (parse-tag tag)
+                    custom (@custom-components (keyword (.-tag parsed)))]
+                (if custom
+                  (let [[_ props & children] v
+                        hasprops (has-props? props)]
+                    (reag-element custom (if hasprops
+                                           (update v 1 set-id-class parsed)
+                                           (into [custom (set-id-class {} parsed)] (rest v)))))
+                  (native-element (cached-parse n) v 1)))
+           0 (let [component (nth v 1 nil)]
+               ;; Support [:> component ...]
+               (assert (= ">" n) (hiccup-err v "Invalid Hiccup tag"))
+               (native-element (->HiccupTag component nil nil nil) v 2))
+           ;; Support extended hiccup syntax, i.e :div.bar>a.foo
+           ;; Apply metadata (e.g. :key) to the outermost element.
+           ;; Metadata is probably used only with sequeneces, and in that case
+           ;; only the key of the outermost element matters.
+           (recur (with-meta [(subs n 0 pos)
+                              (assoc (with-meta v nil) 0 (subs n (inc pos)))]
+                    (meta v)))))
 
-      (instance? NativeWrapper tag)
-      (native-element tag v 1)
+       (instance? NativeWrapper tag)
+       (native-element tag v 1)
 
-      :else (reag-element tag v))))
+       :else (reag-element tag v))))
 
 (declare expand-seq)
 (declare expand-seq-check)

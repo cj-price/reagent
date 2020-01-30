@@ -21,7 +21,7 @@
         (binding [util/*always-update* false]
           (swap! roots assoc container [comp container])
           (batch/flush-after-render)
-          (if (some? callback)
+          (when (fn? callback)
             (callback)))))))
 
 (defn- re-render-component [comp container]
