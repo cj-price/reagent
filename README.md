@@ -1,7 +1,20 @@
-
-# Reagent
+# Reagent with Custom Components
 
 ![Reagent-Project](logo.png)
+
+This fork adds custom components to the available pool of native components in reagent. Components should be a map of kv pairs where the value is a reagent component (function). Since reagent components can take anything, to get `:CustomComponent#some-id.some-class>div` to work, the custom component should be constructed to handle id, class, and children.
+
+*Note* that this affects all instances of reagent render.
+
+`reagent.core/set-custom-components!` can be called to register custom components that reagent will check for when traversing your hiccup structure.
+ 
+    (set-custom-components! {:Note #'Note})
+    
+Once you set your custom components, they can be used like this (given that your components are coded to handle id, class, and children).
+    
+    [:Note#note-id.note-class>div]
+    
+    
 
 A simple [ClojureScript](http://github.com/clojure/clojurescript) interface to [React](http://facebook.github.io/react/).
 
