@@ -369,10 +369,13 @@
                     custom (@custom-components (keyword (.-tag parsed)))]
                 (if custom
                   (let [[_ props & children] v
-                        hasprops (has-props? props)]
-                    (reag-element custom (if hasprops
-                                           (update v 1 set-id-class parsed)
-                                           (into [custom (set-id-class {} parsed)] (rest v)))))
+                        hasprops (has-props? props)
+                        new-v (if (has-props? props)
+                                (update v 1 set-id-class parsed)
+                                (into [custom (set-id-class {} parsed)] (rest v)))]
+                    (if (object? custom)
+                      (native-element (->HiccupTag custom nil nil nil) (into [:>] new-v) 2)
+                      (reag-element custom new-v)))
                   (native-element (cached-parse n) v 1)))
            0 (let [component (nth v 1 nil)]
                ;; Support [:> component ...]
